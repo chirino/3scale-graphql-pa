@@ -1,6 +1,9 @@
 module github.com/chirino/3scale-graphql-pa
 
 require (
+	github.com/3scale/3scale-authorizer v0.0.1
+	github.com/3scale/3scale-go-client v0.4.1-0.20200527144043-59f1bbdf5147
+	github.com/3scale/3scale-porta-go-client v0.0.5
 	github.com/chirino/hawtgo v0.0.1
 	github.com/golang/protobuf v1.3.1
 	github.com/kr/text v0.2.0 // indirect
@@ -15,5 +18,5 @@ require (
 
 go 1.13
 
-//replace github.com/chirino/graphql => ../graphql
-//replace github.com/chirino/graphql-4-apis => ../graphql-4-apis
+// replace github.com/3scale/3scale-porta-go-client => ../3scale-porta-go-client
+// replace github.com/3scale/3scale-authorizer => ../3scale-authorizer
