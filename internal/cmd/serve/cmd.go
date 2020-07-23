@@ -184,6 +184,14 @@ func (s *server) Check(ctx context.Context, req *proto.CheckRequest) (*proto.Che
 
 func getAuthParams(proxyConfig system.ProxyConfig, req *proto.CheckRequest) (authorizer.BackendParams, error) {
 
+	return authorizer.BackendParams{
+		AppID:   getProtoHeader(req.Http.Headers, "X-3Scale-AppID"),
+		AppKey:  getProtoHeader(req.Http.Headers, "X-3Scale-AppKey"),
+		UserKey: getProtoHeader(req.Http.Headers, "X-3Scale-UserKey"),
+	}, nil
+
+	// In case we want to do it more like APICast extracts them... but for now just assume
+	// that APICast will extract these for us and set them as headers that can be reused.
 	proxyConf := proxyConfig.Content.Proxy
 	if proxyConf.AuthAppID == `` {
 		proxyConf.AuthAppID = `app_id`
