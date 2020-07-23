@@ -1,0 +1,153 @@
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: graphql-gw
+    name: graphql-gw
+  spec:
+    ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 8080
+      name: http
+    selector:
+      app: graphql-gw
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      app: graphql-gw
+    name: graphql-gw
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: graphql-gw
+    strategy:
+      resources:
+        limits:
+          memory: "256Mi"
+        requests:
+          memory: "20Mi"
+      type: RollingUpdate
+    template:
+      metadata:
+        labels:
+          app: graphql-gw
+      spec:
+        volumes:
+        - name: config-volume
+          configMap:
+            name: graphql-gw
+        containers:
+        - name: graphql-gw
+          imagePullPolicy: Always
+          image: chirino/graphql-gw:latest
+          volumeMounts:
+          - name: config-volume
+            mountPath: /etc/graphql-gw
+          command: 
+          - /bin/graphql-gw
+          - serve
+          - --config
+          - /etc/graphql-gw/graphql-gw.yml
+          - --workdir
+          - /var/graphql-gw
+          resources:
+            limits:
+              memory: 250Mi
+            requests:
+              memory: 50Mi
+          ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+        - name: graphql-gw-pa
+          imagePullPolicy: Always
+          image: chirino/3scale-graphql-pa:latest
+          command:
+            - /bin/3scale-graphql-pa
+            - serve
+            - --3scale-service-id
+            - "5"
+            - --3scale-url
+            - https://3scale-admin.eloy-3scale-operator.apps.dev-eng-ocp4-3.dev.3sca.net
+            - --3scale-insecure
+            - "true"
+          env:
+          - name: PA_3SCALE_ACCESS_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: graphql-gw
+                key: PA_3SCALE_ACCESS_TOKEN
+          resources:
+            limits:
+              memory: 250Mi
+            requests:
+              memory: 50Mi
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+#- apiVersion: v1
+#  kind: ConfigMap
+#  metadata:
+#    labels:
+#      app: graphql-gw
+#    name: graphql-gw
+#  data:
+#    graphql-gw.yml: |-
+#      # ------------------------------------------------
+#      # graphql-gw config docs: https://bit.ly/2L5TgyB
+#      # ------------------------------------------------
+#      listen: 0.0.0.0:8080
+#      policy-agent:
+#        address: localhost:10000
+#        insecure-client: true
+#      upstreams:
+#        anilist:
+#          url: https://graphql.anilist.co
+#          prefix: Ani
+#        pokemon:
+#          url: https://graphql-pokemon.now.sh
+#          prefix: Pokemon
+#        weather:
+#          type: openapi
+#          prefix: Weather
+#          spec:
+#            url: https://weather.com/swagger-docs/sun/v1/sunV1DailyForecast.json
+#          api:
+#            api-key: "updateme"
+#      types:
+#        - name: Query
+#          actions:
+#            - type: mount
+#              field: anime
+#              upstream: anilist
+#              query: query {}
+#            - type: mount
+#              field: pokemon
+#              upstream: pokemon
+#              query: query {}
+#            - type: mount
+#              field: weather
+#              upstream: weather
+#              query: query {}
+#        - name: AniCharacter
+#          actions:
+#            # mounts the root anilist query to the anime field
+#            - type: link
+#              field: pokemon
+#              vars:
+#                $fullname: name { full }
+#              upstream: pokemon
+#              query: query { pokemon(name:$fullname) }
+#- apiVersion: v1
+#  kind: Secret
+#  metadata:
+#    name: graphql-gw
+#  stringData:
+#    PA_3SCALE_ACCESS_TOKEN:

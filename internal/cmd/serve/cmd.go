@@ -144,10 +144,12 @@ func (s *server) Check(ctx context.Context, req *proto.CheckRequest) (*proto.Che
 		return nil, err
 	}
 
+	log.Printf("checking %d graphql fields", len(req.Graphql.GetFields()))
 	resp := proto.CheckResponse{}
 	for _, f := range req.Graphql.GetFields() {
 		metrics := s.metricsBuilder(f.Path, "GET")
 		if len(metrics) > 0 {
+			log.Printf("issuing authrep for: %s", f.Path)
 			authRep, err := s.manager.AuthRep(threeScaleSystemURL(), authorizer.BackendRequest{
 				Auth: authorizer.BackendAuth{
 					Type:  s.proxyConf.Content.BackendAuthenticationType,
@@ -176,6 +178,7 @@ func (s *server) Check(ctx context.Context, req *proto.CheckRequest) (*proto.Che
 			}
 		}
 	}
+	log.Printf("checks done, failed: %d", len(resp.Fields))
 	return &resp, nil
 }
 
@@ -287,6 +290,7 @@ func getMetricsBuilder(conf system.ProxyConfig) (func(path string, method string
 
 	rules := make([]r, len(conf.Content.Proxy.ProxyRules))
 	for i, pr := range conf.Content.Proxy.ProxyRules {
+		log.Println("compiling rule pattern: ", pr.Pattern)
 		re, err := regexp.Compile(pr.Pattern)
 		if err != nil {
 			return nil, err
