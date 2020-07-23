@@ -55,12 +55,12 @@ items:
           - --config
           - /etc/graphql-gw/graphql-gw.yml
           - --workdir
-          - /var/graphql-gw
+          - /tmp/graphql-gw
           resources:
             limits:
-              memory: 250Mi
+              memory: 200Mi
             requests:
-              memory: 50Mi
+              memory: 100Mi
           ports:
           - containerPort: 8080
             name: http
@@ -85,13 +85,9 @@ items:
                 key: PA_3SCALE_ACCESS_TOKEN
           resources:
             limits:
-              memory: 250Mi
+              memory: 200Mi
             requests:
-              memory: 50Mi
-          ports:
-            - containerPort: 8080
-              name: http
-              protocol: TCP
+              memory: 100Mi
 #- apiVersion: v1
 #  kind: ConfigMap
 #  metadata:
