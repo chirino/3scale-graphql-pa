@@ -6,7 +6,8 @@ RUN apk --no-cache add ca-certificates
 #COPY . .
 #RUN CGO_ENABLED=0 go-wrapper install -ldflags '-extldflags "-static"'
 
-FROM scratch
+# FROM scratch
+FROM registry.access.redhat.com/ubi8/ubi
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 ADD bin /bin
